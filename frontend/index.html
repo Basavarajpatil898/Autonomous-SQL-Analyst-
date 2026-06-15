@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous SQL Analyst</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="page-shell">
+        <header class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">AI-powered relational analytics</p>
+                <h1>Autonomous SQL Analyst</h1>
+                <p class="subtitle">
+                    Ask in plain English, let the agent generate SQL, repair failures, execute against MySQL,
+                    and return a chart-ready answer with full traceability.
+                </p>
+            </div>
+            <div class="hero-status" id="serviceStatus">
+                <span class="status-dot"></span>
+                <span>Backend not checked yet</span>
+            </div>
+        </header>
+
+        <main class="workspace">
+            <section class="query-band">
+                <form id="queryForm" class="query-form">
+                    <label for="question">Ask a database question</label>
+                    <textarea
+                        id="question"
+                        name="question"
+                        rows="5"
+                        placeholder="Example: Show monthly revenue for the last 6 months and compare it with total orders."
+                        required
+                    ></textarea>
+
+                    <div class="controls-grid">
+                        <label>
+                            <span>API base URL</span>
+                            <input id="apiBaseUrl" name="apiBaseUrl" type="text" value="http://127.0.0.1:8000/api/v1">
+                        </label>
+                        <label>
+                            <span>Maximum rows</span>
+                            <input id="maxRows" name="maxRows" type="number" min="1" max="500" value="50">
+                        </label>
+                    </div>
+
+                    <div class="sample-row">
+                        <button type="button" class="sample-chip" data-sample="Show total revenue by product category.">Revenue by category</button>
+                        <button type="button" class="sample-chip" data-sample="List the top 10 customers by lifetime spend.">Top customers</button>
+                        <button type="button" class="sample-chip" data-sample="Show order count by month for the current year.">Orders by month</button>
+                    </div>
+
+                    <div class="action-row">
+                        <button type="submit" class="primary-btn">Run analysis</button>
+                        <button type="button" id="retryButton" class="secondary-btn" disabled>Retry last request</button>
+                    </div>
+                </form>
+
+                <aside class="guide-panel">
+                    <h2>Pipeline</h2>
+                    <ol>
+                        <li>Schema is inspected from the live relational database.</li>
+                        <li>Ollama generates SQL with LangChain prompt orchestration.</li>
+                        <li>Execution errors feed a self-healing correction loop.</li>
+                        <li>Gemini takes over when Ollama exhausts its retries.</li>
+                        <li>Results return as rows, metadata, SQL, and chart hints.</li>
+                    </ol>
+                </aside>
+            </section>
+
+            <section class="results-band">
+                <div class="panel summary-panel">
+                    <div class="panel-heading">
+                        <h2>Response summary</h2>
+                        <div id="loadingBadge" class="loading-badge hidden">Working...</div>
+                    </div>
+                    <div class="summary-grid" id="summaryGrid">
+                        <div class="metric">
+                            <span class="metric-label">Provider</span>
+                            <strong id="providerValue">-</strong>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Rows</span>
+                            <strong id="rowCountValue">0</strong>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Columns</span>
+                            <strong id="columnCountValue">0</strong>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Chart</span>
+                            <strong id="chartTypeValue">Table</strong>
+                        </div>
+                    </div>
+                    <div class="status-message" id="statusMessage">
+                        Submit a natural-language request to begin.
+                    </div>
+                </div>
+
+                <div class="panel chart-panel">
+                    <div class="panel-heading">
+                        <h2>Automatic visualization</h2>
+                        <span id="chartReason" class="panel-note">No chart selected yet.</span>
+                    </div>
+                    <div class="chart-wrap">
+                        <canvas id="resultChart"></canvas>
+                        <div id="chartEmptyState" class="empty-state">
+                            Chart recommendations will appear here once a query succeeds.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel sql-panel">
+                    <div class="panel-heading">
+                        <h2>Generated SQL</h2>
+                    </div>
+                    <pre id="sqlOutput" class="sql-output">-- waiting for a query</pre>
+                </div>
+
+                <div class="panel table-panel">
+                    <div class="panel-heading">
+                        <h2>Result table</h2>
+                    </div>
+                    <div id="tableContainer" class="table-container">
+                        <div class="empty-state">Rows will appear here after the backend executes a query.</div>
+                    </div>
+                </div>
+
+                <div class="panel trace-panel">
+                    <div class="panel-heading">
+                        <h2>Recovery trace</h2>
+                    </div>
+                    <div id="traceContainer" class="trace-container">
+                        <div class="empty-state">Attempt history will appear after execution.</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="./app.js"></script>
+</body>
+</html>
+

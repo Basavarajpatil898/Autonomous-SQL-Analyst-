@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: autonomous-sql-analyst-db
+    environment:
+      MYSQL_DATABASE: autonomous_sql_analyst
+      MYSQL_USER: sql_analyst
+      MYSQL_PASSWORD: sql_analyst
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  backend:
+    build:
+      context: ./backend
+    container_name: autonomous-sql-analyst-api
+    environment:
+      APP_NAME: Autonomous SQL Analyst API
+      API_V1_PREFIX: /api/v1
+      DATABASE_URL: mysql+pymysql://sql_analyst:sql_analyst@mysql:3306/autonomous_sql_analyst
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: llama3
+      OLLAMA_ATTEMPTS: 3
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: gemini-2.5-flash
+      GEMINI_ATTEMPTS: 2
+      REQUEST_TIMEOUT_SECONDS: 90
+      DEFAULT_MAX_ROWS: 50
+      ABSOLUTE_MAX_ROWS: 500
+      CORS_ORIGINS: http://127.0.0.1:5500,http://localhost:5500
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: autonomous-sql-analyst-ui
+    ports:
+      - "5500:80"
+    depends_on:
+      - backend
