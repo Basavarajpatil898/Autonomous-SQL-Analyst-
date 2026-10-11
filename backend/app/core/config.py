@@ -1,7 +1,8 @@
 from functools import lru_cache
+from typing import Annotated
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -19,7 +20,7 @@ class Settings(BaseSettings):
     request_timeout_seconds: int = Field(default=90, ge=10, le=300)
     default_max_rows: int = Field(default=50, ge=1, le=500)
     absolute_max_rows: int = Field(default=500, ge=10, le=5000)
-    cors_origins: list[str] = Field(
+    cors_origins: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: [
             "http://127.0.0.1:5500",
             "http://localhost:5500",

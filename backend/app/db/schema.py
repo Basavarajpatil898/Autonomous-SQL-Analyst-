@@ -57,7 +57,21 @@ class SchemaIntrospector:
                 "relationships": relationships,
             }
         except SQLAlchemyError as exc:
-            raise DatabaseConnectionError(f"Could not inspect the database schema: {exc}") from exc
+            error_text = str(exc)
+            if "access denied" in error_text.lower():
+                message = (
+                    "MySQL rejected the configured username or password. "
+                    "Update DATABASE_URL in backend/.env to match a MySQL account, "
+                    "then restart the backend."
+                )
+            elif "unknown database" in error_text.lower():
+                message = (
+                    "The configured MySQL database does not exist. "
+                    "Create it and load database/init.sql, or update DATABASE_URL in backend/.env."
+                )
+            else:
+                message = f"Could not inspect the database schema: {error_text}"
+            raise DatabaseConnectionError(message, details={"database_error": error_text}) from exc
 
     def render_schema_for_prompt(self, snapshot: dict) -> str:
         lines = [f"Database dialect: {snapshot['dialect']}"]

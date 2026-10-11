@@ -18,8 +18,8 @@ class ConfigurationError(AppError):
 
 
 class DatabaseConnectionError(AppError):
-    def __init__(self, message: str) -> None:
-        super().__init__(message, status_code=500)
+    def __init__(self, message: str, details: dict | None = None) -> None:
+        super().__init__(message, status_code=500, details=details)
 
 
 class QueryValidationError(AppError):

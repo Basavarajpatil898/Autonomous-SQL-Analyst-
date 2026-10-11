@@ -1,8 +1,9 @@
 import unittest
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from app.core.config import get_settings
+from app.core.config import Settings, get_settings
 from app.core.errors import QueryValidationError
 from app.main import app
 from app.services.query_pipeline import AutonomousQueryService
@@ -25,6 +26,13 @@ class ApiSmokeTests(unittest.TestCase):
         self.assertEqual(body["status"], "ok")
         self.assertIn("ollama_model", body)
 
+    def test_configured_cors_origins_load_from_env_file(self) -> None:
+        env_file = Path(__file__).resolve().parents[1] / ".env"
+        if not env_file.exists():
+            self.skipTest("Local .env is not configured")
+        settings = Settings(_env_file=env_file)
+        self.assertIn("http://127.0.0.1:5500", settings.cors_origins)
+
 
 class QueryHelperTests(unittest.TestCase):
     def test_prepare_sql_rejects_mutating_queries(self) -> None:
@@ -41,6 +49,12 @@ class QueryHelperTests(unittest.TestCase):
         chart = choose_visualization(rows, metadata)
         self.assertTrue(chart.enabled)
         self.assertEqual(chart.chart_type, "pie")
+
+    def test_visualization_is_disabled_for_one_result_row(self) -> None:
+        rows = [{"category": "Software", "revenue": 1200.0}]
+        metadata = build_result_metadata(["category", "revenue"], rows, truncated=False)
+        chart = choose_visualization(rows, metadata)
+        self.assertFalse(chart.enabled)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.core.config import Settings, get_settings
-from app.models.request_response import QueryRequest, QueryResponse, SchemaResponse
+from app.models.request_response import QueryRequest, QueryResponse, SchemaRequest, SchemaResponse
 from app.services.query_pipeline import AutonomousQueryService
 
 router = APIRouter(prefix="/query", tags=["query"])
@@ -24,4 +24,12 @@ async def inspect_schema(
     service: AutonomousQueryService = Depends(get_query_service),
 ) -> SchemaResponse:
     return service.get_schema()
+
+
+@router.post("/schema", response_model=SchemaResponse)
+async def inspect_selected_schema(
+    payload: SchemaRequest,
+    service: AutonomousQueryService = Depends(get_query_service),
+) -> SchemaResponse:
+    return service.get_schema(payload.database_url)
 

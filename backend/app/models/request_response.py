@@ -12,6 +12,13 @@ class QueryRequest(BaseModel):
     )
 
 
+class SchemaRequest(BaseModel):
+    database_url: str | None = Field(
+        default=None,
+        description="Optional per-request database connection override.",
+    )
+
+
 class ColumnMetadata(BaseModel):
     name: str
     data_type: str

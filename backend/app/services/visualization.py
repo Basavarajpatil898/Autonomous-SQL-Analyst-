@@ -52,10 +52,10 @@ def build_result_metadata(column_names: list[str], rows: list[dict], truncated: 
 
 
 def choose_visualization(rows: list[dict], metadata: ResultMetadata) -> VisualizationRecommendation:
-    if not rows or metadata.column_count < 2:
+    if len(rows) < 2 or metadata.column_count < 2:
         return VisualizationRecommendation(
             enabled=False,
-            reasoning="Not enough data columns to recommend a chart.",
+            reasoning="At least two rows and two columns are needed for a meaningful chart.",
         )
 
     numeric_columns = [column.name for column in metadata.columns if column.is_numeric]

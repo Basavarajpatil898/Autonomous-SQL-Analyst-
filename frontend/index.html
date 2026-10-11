@@ -3,145 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Autonomous SQL Analyst</title>
+    <meta name="theme-color" content="#f7f8f6">
+    <title>Querydesk — Autonomous SQL Analyst</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="page-shell">
-        <header class="hero">
-            <div class="hero-copy">
-                <p class="eyebrow">AI-powered relational analytics</p>
-                <h1>Autonomous SQL Analyst</h1>
-                <p class="subtitle">
-                    Ask in plain English, let the agent generate SQL, repair failures, execute against MySQL,
-                    and return a chart-ready answer with full traceability.
-                </p>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <a class="brand" href="#top" aria-label="Querydesk home">
+                <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span>querydesk<span class="brand-period">.</span></span>
+            </a>
+
+            <div class="sidebar-caption">WORKSPACE</div>
+            <a class="nav-item nav-item-active" href="#ask"><span class="nav-icon">✳</span> Ask a question</a>
+            <a class="nav-item" href="#schemaSection"><span class="nav-icon">◇</span> Database schema</a>
+            <a class="nav-item" href="#results"><span class="nav-icon">▤</span> Results</a>
+            <a class="nav-item" href="#sqlPanel"><span class="nav-icon nav-code">&lt;/&gt;</span> SQL preview</a>
+
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-caption">CONNECTION</div>
+            <div class="connection-card">
+                <span class="connection-icon">◈</span>
+                <span class="connection-copy"><strong id="connectionName">Workspace MySQL</strong><small id="connectionDetail">Checking backend…</small></span>
+                <span class="connection-dot" id="connectionDot"></span>
             </div>
-            <div class="hero-status" id="serviceStatus">
-                <span class="status-dot"></span>
-                <span>Backend not checked yet</span>
+            <button id="connectionHelp" class="sidebar-help" type="button">How to connect a database <span>↗</span></button>
+
+            <div class="sidebar-footer">
+                <span class="footer-avatar">Q</span>
+                <span><strong>SQL Analyst</strong><small>Local workspace</small></span>
+                <span class="footer-more">···</span>
             </div>
-        </header>
+        </aside>
 
-        <main class="workspace">
-            <section class="query-band">
-                <form id="queryForm" class="query-form">
-                    <label for="question">Ask a database question</label>
-                    <textarea
-                        id="question"
-                        name="question"
-                        rows="5"
-                        placeholder="Example: Show monthly revenue for the last 6 months and compare it with total orders."
-                        required
-                    ></textarea>
+        <main class="main-content" id="top">
+            <header class="topbar">
+                <div class="breadcrumb"><span>Workspace</span><span class="breadcrumb-slash">/</span><strong>Ask data</strong></div>
+                <a class="docs-link" href="http://127.0.0.1:8000/docs" target="_blank" rel="noreferrer">API documentation <span>↗</span></a>
+            </header>
 
-                    <div class="controls-grid">
-                        <label>
-                            <span>API base URL</span>
-                            <input id="apiBaseUrl" name="apiBaseUrl" type="text" value="http://127.0.0.1:8000/api/v1">
-                        </label>
-                        <label>
-                            <span>Maximum rows</span>
-                            <input id="maxRows" name="maxRows" type="number" min="1" max="500" value="50">
-                        </label>
+            <div class="content-wrap">
+                <section class="intro" id="ask">
+                    <div class="intro-kicker"><span class="kicker-spark">✳</span> YOUR DATA, IN PLAIN ENGLISH</div>
+                    <h1>What would you like<br class="desktop-break"> to <span>know?</span></h1>
+                    <p>Ask a question about your database. Get a clear answer, a chart, and the SQL behind it.</p>
+                </section>
+
+                <section class="composer-card" aria-label="Ask a data question">
+                    <form id="queryForm" class="query-form">
+                        <label class="visually-hidden" for="question">Your question</label>
+                        <textarea id="question" name="question" rows="3" placeholder="Ask anything about your data…" required></textarea>
+                        <div class="composer-bottom">
+                            <div class="composer-options">
+                                <label class="row-option" for="maxRows"><span>↕</span> Up to <input id="maxRows" name="maxRows" type="number" min="1" max="500" value="50" aria-label="Maximum result rows"> rows</label>
+                                <details class="settings-menu database-menu">
+                                    <summary aria-label="Choose database" title="Choose database">▤ <span>Database</span></summary>
+                                    <div class="database-settings">
+                                        <label for="databaseTarget">Connection</label>
+                                        <select id="databaseTarget">
+                                            <option value="configured">Workspace MySQL</option>
+                                            <option value="mysql">Another MySQL database</option>
+                                            <option value="sqlite">SQLite database file</option>
+                                        </select>
+                                        <div id="mysqlConnectionFields" class="connection-fields hidden">
+                                            <label for="dbHost">Host</label><input id="dbHost" type="text" value="127.0.0.1" autocomplete="off">
+                                            <div class="connection-field-row">
+                                                <label for="dbPort">Port</label><input id="dbPort" type="number" value="3306" min="1" max="65535">
+                                            </div>
+                                            <label for="dbName">Database name</label><input id="dbName" type="text" autocomplete="off">
+                                            <label for="dbUser">Username</label><input id="dbUser" type="text" autocomplete="username">
+                                            <label for="dbPassword">Password</label><input id="dbPassword" type="password" autocomplete="current-password">
+                                        </div>
+                                        <div id="sqliteConnectionFields" class="connection-fields hidden">
+                                            <label for="sqlitePath">Database file path on the backend machine</label>
+                                            <input id="sqlitePath" type="text" placeholder="C:\\data\\analytics.db" autocomplete="off">
+                                        </div>
+                                        <button type="button" id="connectDatabaseButton" class="connect-db-button">Connect and inspect</button>
+                                        <p class="database-help">MySQL and SQLite are supported. SQLite files must be accessible to the backend.</p>
+                                    </div>
+                                </details>
+                                <details class="settings-menu">
+                                    <summary aria-label="Connection settings" title="Connection settings">⚙ <span>Settings</span></summary>
+                                    <label for="apiBaseUrl">API base URL</label>
+                                    <input id="apiBaseUrl" name="apiBaseUrl" type="url" value="http://127.0.0.1:8000/api/v1">
+                                </details>
+                            </div>
+                            <button type="submit" class="primary-btn"><span class="send-icon">↑</span> Run analysis</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="examples-section" aria-label="Example questions">
+                    <div class="section-label">TRY ASKING <span>Pick an example to get started</span></div>
+                    <div class="example-grid">
+                        <button type="button" class="example-card" data-sample="Show total revenue by product category.">
+                            <span class="example-icon example-icon-green">↗</span><span class="example-copy"><strong>Revenue by category</strong><small>Compare sales across product types</small></span><span class="example-arrow">→</span>
+                        </button>
+                        <button type="button" class="example-card" data-sample="List the top 10 customers by lifetime spend.">
+                            <span class="example-icon example-icon-blue">♙</span><span class="example-copy"><strong>Top customers</strong><small>Find your highest value buyers</small></span><span class="example-arrow">→</span>
+                        </button>
+                        <button type="button" class="example-card" data-sample="Show order count by month for the current year.">
+                            <span class="example-icon example-icon-orange">▥</span><span class="example-copy"><strong>Orders over time</strong><small>See monthly order trends</small></span><span class="example-arrow">→</span>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="schema-section" id="schemaSection" aria-label="Active database schema">
+                    <div class="schema-title-row">
+                        <div><div class="section-label">KNOW YOUR DATA</div><h2>Database schema</h2><p>Tables and relationships in the active connection.</p></div>
+                        <button type="button" id="refreshSchemaButton" class="retry-button">↻ Refresh schema</button>
+                    </div>
+                    <div class="schema-summary" id="schemaSummary"><div class="schema-placeholder"><span class="loading-spinner"></span> Inspecting the active database…</div></div>
+                    <div class="schema-table-grid" id="schemaTables"></div>
+                    <div class="schema-relationships hidden" id="schemaRelationships"></div>
+                    <div class="schema-query-guide">
+                        <div class="schema-guide-heading"><div><div class="section-label">WHAT SHOULD I TYPE?</div><p>Ask about a table, what you want to know, and how to group it. These examples use your actual schema.</p></div><span class="schema-guide-spark">✳</span></div>
+                        <div class="schema-question-examples" id="schemaQuestionExamples"><span class="schema-placeholder">Connect a database to see question examples that match its tables.</span></div>
+                        <div class="schema-key-legend"><span><b>PK</b> uniquely identifies a row</span><span><b>FK</b> links to another table</span></div>
+                    </div>
+                </section>
+
+                <section class="results-section" id="results">
+                    <div class="results-title-row">
+                        <div><div class="section-label">YOUR ANALYSIS</div><h2>Results</h2></div>
+                        <div class="result-actions"><span id="loadingBadge" class="loading-badge hidden"><span class="loading-spinner"></span> Analyzing</span><button type="button" id="retryButton" class="retry-button" disabled>↻ Retry</button></div>
                     </div>
 
-                    <div class="sample-row">
-                        <button type="button" class="sample-chip" data-sample="Show total revenue by product category.">Revenue by category</button>
-                        <button type="button" class="sample-chip" data-sample="List the top 10 customers by lifetime spend.">Top customers</button>
-                        <button type="button" class="sample-chip" data-sample="Show order count by month for the current year.">Orders by month</button>
-                    </div>
+                    <div class="status-banner" id="statusBanner"><span class="status-banner-icon">i</span><span id="statusMessage">Connect your database and ask a question to see results here.</span></div>
 
-                    <div class="action-row">
-                        <button type="submit" class="primary-btn">Run analysis</button>
-                        <button type="button" id="retryButton" class="secondary-btn" disabled>Retry last request</button>
-                    </div>
-                </form>
-
-                <aside class="guide-panel">
-                    <h2>Pipeline</h2>
-                    <ol>
-                        <li>Schema is inspected from the live relational database.</li>
-                        <li>Ollama generates SQL with LangChain prompt orchestration.</li>
-                        <li>Execution errors feed a self-healing correction loop.</li>
-                        <li>Gemini takes over when Ollama exhausts its retries.</li>
-                        <li>Results return as rows, metadata, SQL, and chart hints.</li>
-                    </ol>
-                </aside>
-            </section>
-
-            <section class="results-band">
-                <div class="panel summary-panel">
-                    <div class="panel-heading">
-                        <h2>Response summary</h2>
-                        <div id="loadingBadge" class="loading-badge hidden">Working...</div>
-                    </div>
                     <div class="summary-grid" id="summaryGrid">
-                        <div class="metric">
-                            <span class="metric-label">Provider</span>
-                            <strong id="providerValue">-</strong>
-                        </div>
-                        <div class="metric">
-                            <span class="metric-label">Rows</span>
-                            <strong id="rowCountValue">0</strong>
-                        </div>
-                        <div class="metric">
-                            <span class="metric-label">Columns</span>
-                            <strong id="columnCountValue">0</strong>
-                        </div>
-                        <div class="metric">
-                            <span class="metric-label">Chart</span>
-                            <strong id="chartTypeValue">Table</strong>
-                        </div>
+                        <div class="metric"><span class="metric-label">AI MODEL</span><strong id="providerValue">—</strong></div>
+                        <div class="metric"><span class="metric-label">ROWS RETURNED</span><strong id="rowCountValue">—</strong></div>
+                        <div class="metric"><span class="metric-label">COLUMNS</span><strong id="columnCountValue">—</strong></div>
+                        <div class="metric metric-chart" id="chartMetric"><span class="metric-label">VISUALIZATION</span><strong id="chartTypeValue">—</strong></div>
                     </div>
-                    <div class="status-message" id="statusMessage">
-                        Submit a natural-language request to begin.
-                    </div>
-                </div>
 
-                <div class="panel chart-panel">
-                    <div class="panel-heading">
-                        <h2>Automatic visualization</h2>
-                        <span id="chartReason" class="panel-note">No chart selected yet.</span>
-                    </div>
-                    <div class="chart-wrap">
-                        <canvas id="resultChart"></canvas>
-                        <div id="chartEmptyState" class="empty-state">
-                            Chart recommendations will appear here once a query succeeds.
-                        </div>
-                    </div>
-                </div>
+                    <div class="result-grid">
+                        <article class="result-card insight-panel hidden" id="insightPanel">
+                            <div class="insight-mark" aria-hidden="true">✳</div>
+                            <div class="insight-content"><div class="section-label">KEY INSIGHT</div><h3 id="insightHeadline"></h3><p id="insightDetail"></p></div>
+                            <span class="insight-evidence">Based on returned results</span>
+                        </article>
 
-                <div class="panel sql-panel">
-                    <div class="panel-heading">
-                        <h2>Generated SQL</h2>
-                    </div>
-                    <pre id="sqlOutput" class="sql-output">-- waiting for a query</pre>
-                </div>
+                        <article class="result-card chart-panel hidden" id="chartPanel">
+                            <div class="card-heading"><div><h3>Visualization</h3><p id="chartReason">A chart will appear when your query returns data.</p></div><span class="card-heading-icon">▥</span></div>
+                            <div class="chart-wrap"><canvas id="resultChart"></canvas><div id="chartEmptyState" class="empty-state"><span class="empty-illustration">▥</span><strong>Your chart will show up here</strong><span>Ask a question involving a category or a trend.</span></div></div>
+                        </article>
 
-                <div class="panel table-panel">
-                    <div class="panel-heading">
-                        <h2>Result table</h2>
-                    </div>
-                    <div id="tableContainer" class="table-container">
-                        <div class="empty-state">Rows will appear here after the backend executes a query.</div>
-                    </div>
-                </div>
+                        <article class="result-card sql-panel" id="sqlPanel">
+                            <div class="card-heading"><div><h3>SQL query</h3><p>Review the query generated for your question.</p></div><button id="copySqlButton" class="icon-button" type="button" aria-label="Copy SQL query" title="Copy SQL">▢</button></div>
+                            <pre id="sqlOutput" class="sql-output"><code>-- Your generated SQL will appear here</code></pre>
+                            <div class="sql-footer"><span class="sql-language"><span></span> <span id="sqlDialect">SQL</span></span><span>Read-only query</span></div>
+                        </article>
 
-                <div class="panel trace-panel">
-                    <div class="panel-heading">
-                        <h2>Recovery trace</h2>
+                        <article class="result-card table-panel">
+                            <div class="card-heading table-heading"><div><h3>Data table</h3><p>Explore the rows returned by your query.</p></div><span class="table-count" id="tableCount">Waiting for results</span></div>
+                            <div id="tableContainer" class="table-container"><div class="empty-state table-empty"><span class="empty-illustration">▤</span><strong>Nothing to show yet</strong><span>Your data will appear here after analysis.</span></div></div>
+                        </article>
+
+                        <details class="trace-panel">
+                            <summary><span class="trace-summary-icon">⟳</span><span><strong>Query activity</strong><small>See the SQL generation and recovery steps</small></span><span class="trace-chevron">⌄</span></summary>
+                            <div id="traceContainer" class="trace-container"><div class="trace-placeholder">Activity will appear after you run an analysis.</div></div>
+                        </details>
                     </div>
-                    <div id="traceContainer" class="trace-container">
-                        <div class="empty-state">Attempt history will appear after execution.</div>
-                    </div>
-                </div>
-            </section>
+                </section>
+
+                <footer class="page-footer"><span><span class="footer-brand-mark">✳</span> Querydesk</span><span>Answers you can inspect. SQL you can trust.</span></footer>
+            </div>
         </main>
     </div>
+
+    <dialog id="connectionDialog" class="help-dialog">
+        <form method="dialog"><button class="dialog-close" aria-label="Close">×</button></form>
+        <span class="dialog-icon">◈</span><div class="section-label">GETTING STARTED</div><h2>Connect your database</h2>
+        <p>This workspace needs three services to answer questions:</p>
+        <ol><li><strong>MySQL or SQLite</strong> configured in the Database menu. MySQL can use the sample schema from <code>database/init.sql</code>; SQLite files must be accessible to the backend.</li><li><strong>Backend API</strong> running at the URL in Settings.</li><li><strong>Ollama</strong> running locally with the configured model downloaded.</li></ol>
+        <p class="dialog-note">Update the database connection string in <code>backend/.env</code>. You can also configure a Gemini API key there as a fallback.</p>
+        <a class="dialog-docs" href="http://127.0.0.1:8000/docs" target="_blank" rel="noreferrer">Open API documentation ↗</a>
+    </dialog>
 
     <script src="./app.js"></script>
 </body>
 </html>
-
